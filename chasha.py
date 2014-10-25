@@ -6,6 +6,43 @@ import socket
 # directory could just have a simple "add_child"
 # XXX: have a sane default of just dumping all routes?
 # would have to associate a name with all routes too...
+
+class Directory(object):
+
+    def __init__(self, children=None):
+        if children is not None:
+            self.children = children
+        else:
+            self.children = []
+
+    def add_child(self, child):
+        self.children.append(child)
+
+    def __str__(self):
+        res = []
+        for child in children:
+            if isinstance(child, (list, tuple)):
+                tmpl = "{0}{1}\t{2}\t{3} {4}\t{5}"
+                if isinstance(child, tuple):
+                    child = list(child)
+
+                res.append(tmpl.format(child.get(0),
+                                       child.get(1),
+                                       child.get(2, "FAKE"),
+                                       child.get(3, "NULL"),
+                                       child.get(4, "0"),
+                                       child.get(5, "+")))
+            elif isinstance(child, Directory):
+                res.append(child.listing())
+            #elif isinstance(child, Information):
+            #    res.append(str(child))
+            elif isinstance(child, str):
+                # should probably handle multiline strings here...
+                res.append("i{0}\tFAKE\tNULL 0\t+".format(child))
+        res.append(".\r\n")
+        return '\r\n'.join(res)
+
+
 class Chasha(object):
 
     def __init__(self):
@@ -23,11 +60,17 @@ class Chasha(object):
     def default(self):
         return self.route("/")
 
+    def default_directory(self):
+        pass
+
     def router(self, descriptor):
         idx = 0
         print "[!] In router; descriptor: {0}".format(descriptor)
         if descriptor == "":
-            return self.routes["/"]
+            if "/" in self.routes
+                return self.routes["/"]
+            else:
+                return self.default_directory()
         # NOTE: just for intial testing
         # actual processing has to go on here in the real deal...
         # TODO: look at processing the routes with subs & regex...

@@ -15,6 +15,7 @@ def default():
     return """0Foo\t/foo/\t{0} {1}\t+\r
 iSome test info here...\tfake\tfake\t0\r
 iSome more test info...\tfake\tfake\t0\r
+.\r
 """
 
 app.run()
