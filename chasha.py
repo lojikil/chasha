@@ -7,6 +7,13 @@ import socket
 # XXX: have a sane default of just dumping all routes?
 # would have to associate a name with all routes too...
 
+def cget(obj, idx, default=None):
+    try:
+        return obj[idx]
+    except IndexError:
+        return default
+
+
 class Directory(object):
 
     def __init__(self, children=None):
@@ -20,18 +27,18 @@ class Directory(object):
 
     def __str__(self):
         res = []
-        for child in children:
+        for child in self.children:
             if isinstance(child, (list, tuple)):
                 tmpl = "{0}{1}\t{2}\t{3} {4}\t{5}"
                 if isinstance(child, tuple):
                     child = list(child)
 
-                res.append(tmpl.format(child.get(0),
-                                       child.get(1),
-                                       child.get(2, "FAKE"),
-                                       child.get(3, "NULL"),
-                                       child.get(4, "0"),
-                                       child.get(5, "+")))
+                res.append(tmpl.format(cget(child, 0),
+                                       cget(child, 1),
+                                       cget(child, 2, "FAKE"),
+                                       cget(child, 3, "NULL"),
+                                       cget(child, 4, "0"),
+                                       cget(child, 5, "+")))
             elif isinstance(child, Directory):
                 res.append(child.listing())
             #elif isinstance(child, Information):
@@ -67,7 +74,7 @@ class Chasha(object):
         idx = 0
         print "[!] In router; descriptor: {0}".format(descriptor)
         if descriptor == "":
-            if "/" in self.routes
+            if "/" in self.routes:
                 return self.routes["/"]
             else:
                 return self.default_directory()
@@ -100,7 +107,7 @@ class Chasha(object):
                 data = handler()
                 print "[!] handler returned data..."
                 # NOTE: should process return type here...
-                conn.send(data)
+                conn.send(str(data))
                 conn.close()
             except KeyboardInterrupt:
                 self.loop_flag = False
