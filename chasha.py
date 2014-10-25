@@ -33,12 +33,13 @@ class Directory(object):
                 if isinstance(child, tuple):
                     child = list(child)
 
+                print "[!] child: ", child
                 res.append(tmpl.format(cget(child, 0),
                                        cget(child, 1),
                                        cget(child, 2, "FAKE"),
                                        cget(child, 3, "NULL"),
                                        cget(child, 4, "0"),
-                                       cget(child, 5, "+")))
+                                       cget(child, 5, "")))
             elif isinstance(child, Directory):
                 res.append(child.listing())
             #elif isinstance(child, Information):
@@ -47,6 +48,7 @@ class Directory(object):
                 # should probably handle multiline strings here...
                 res.append("i{0}\tFAKE\tNULL 0\t+".format(child))
         res.append(".\r\n")
+        print "[!] returning: ", res
         return '\r\n'.join(res)
 
 
