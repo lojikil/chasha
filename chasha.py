@@ -71,8 +71,8 @@ class Chasha(object):
 
     def __init__(self):
         self.routes = {}
-        self.typepats = {
-                         'int': '[0-9]+',
+        self.dyn_routes = {}
+        self.typepats = {'int': '[0-9]+',
                          'float': '[0-9]+\.[0-9]+',
                          'path': '[A-Za-z0-9/\.\-\s]+',
                          'alnum': '[A-Za-z0-9]',
@@ -109,12 +109,12 @@ class Chasha(object):
         for part in parts:
 
             if ':' in part:
-                chasti = parts[1:-1].split(':')
+                chasti = part[1:-1].split(':')
                 if chasti[1] not in self.typepats:
                     pat = ".*"
                 else:
                     pat = self.typepats[chasti[1]]
-                res.append("(?<{0}>{1})", chasti[0], pat)
+                res.append("(?P<{0}>{1})".format(chasti[0], pat))
             else:
                 res.append(part)
 
@@ -132,15 +132,19 @@ class Chasha(object):
         if descriptor in self.routes:
             # do we have a static descriptor that matches?
             # if yes, just return it
+            print "[!] in self.routes?"
             return self.routes[descriptor]
         else:
+            print "[!] in self.dyn_routes?"
             descriptors = self.dyn_routes.keys()
             for desc in descriptors:
                 mat = desc.match(descriptor)
 
                 if mat:
-                    return (mat, self.dun_routes(desc))
+                    print "[!] in dyn return?"
+                    return (mat, self.dyn_routes[desc])
 
+        print "[!] in None return"
         return None
 
     def run(self, **kwargs):
@@ -164,15 +168,19 @@ class Chasha(object):
                 try:
                     handler = self.router(desc)
                     print "[!] router matched said data..."
-                    if isinstance(router, tuple):
+                    print "[!] type of handler: ", type(handler)
+                    if isinstance(handler, tuple):
                         mat = handler[0]
+                        print "[!] mat.groupdict:", mat.groupdict()
+                        print "[!] handler: ", handler[1]
                         handler = handler[1]
-                        handler(**mat.groupdict())
+                        data = handler(**mat.groupdict())
                     else:
                         data = handler()
                     print "[!] handler returned data..."
-                except Exception:
-                    data = "3nosuchdescriptor\tdoes not exist\terror.host\t1\r\n"
+                except Exception as e:
+                    print "[!] exception: ", e
+                    data = "3nosuchdroute\tdoes not exist\terror.host\t1\r\n"
                 # NOTE: should process return type here...
                 conn.send(str(data))
                 conn.close()
