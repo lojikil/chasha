@@ -1,4 +1,5 @@
 import socket
+import re
 
 
 # TODO: add Directory/Info classes to more easily format the various types
@@ -85,7 +86,7 @@ class Chasha(object):
     def add_route(self, descriptor, callback):
         if ':' in descriptor:
             desc = self.compile_route(descriptor)
-            self.routes[desc] = callback
+            self.dyn_routes[re.compile(desc)] = callback
         else:
             self.routes[descriptor] = callback
 
@@ -103,6 +104,8 @@ class Chasha(object):
 
         res = []
 
+        # could probably do this in a few replace calls,
+        # but being explicit & breaking things apart seems nicer to me
         for part in parts:
 
             if ':' in part:
@@ -126,7 +129,19 @@ class Chasha(object):
         # actual processing has to go on here in the real deal...
         # TODO: look at processing the routes with subs & regex...
         # e.g. foo/bar<blah:int> could become foo/bar<blah:[0-9]+
-        return self.routes[descriptor]
+        if descriptor in self.routes:
+            # do we have a static descriptor that matches?
+            # if yes, just return it
+            return self.routes[descriptor]
+        else:
+            descriptors = self.dyn_routes.keys()
+            for desc in descriptors:
+                mat = desc.match(descriptor)
+
+                if mat:
+                    return (mat, self.dun_routes(desc))
+
+        return None
 
     def run(self, **kwargs):
 
@@ -146,10 +161,18 @@ class Chasha(object):
                 desc = conn.recv(2048)
                 desc = desc.strip()
                 print "[!] client sent data..."
-                handler = self.router(desc)
-                print "[!] router matched said data..."
-                data = handler()
-                print "[!] handler returned data..."
+                try:
+                    handler = self.router(desc)
+                    print "[!] router matched said data..."
+                    if isinstance(router, tuple):
+                        mat = handler[0]
+                        handler = handler[1]
+                        handler(**mat.groupdict())
+                    else:
+                        data = handler()
+                    print "[!] handler returned data..."
+                except Exception:
+                    data = "3nosuchdescriptor\tdoes not exist\terror.host\t1\r\n"
                 # NOTE: should process return type here...
                 conn.send(str(data))
                 conn.close()
