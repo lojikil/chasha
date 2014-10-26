@@ -29,7 +29,7 @@ class Directory(object):
         res = []
         for child in self.children:
             if isinstance(child, (list, tuple)):
-                tmpl = "{0}{1}\t{2}\t{3} {4}\t{5}"
+                tmpl = "{0}{1}\t{2}\t{3}\t{4}\t{5}"
                 if isinstance(child, tuple):
                     child = list(child)
 
@@ -39,7 +39,7 @@ class Directory(object):
                                        cget(child, 2, "FAKE"),
                                        cget(child, 3, "NULL"),
                                        cget(child, 4, "0"),
-                                       cget(child, 5, "")))
+                                       cget(child, 5, "+")))
             elif isinstance(child, Directory):
                 res.append(child.listing())
             #elif isinstance(child, Information):
