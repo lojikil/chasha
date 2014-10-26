@@ -16,14 +16,28 @@ def cget(obj, idx, default=None):
 
 class Directory(object):
 
-    def __init__(self, children=None):
+    def __init__(self, descriptor, name=None, children=None, port=70,
+                 host='127.0.0.1'):
+
+        self.descriptor = descriptor
+        self.port = port
+        self.host = host
         if children is not None:
             self.children = children
         else:
             self.children = []
 
+        self.name = name
+
     def add_child(self, child):
         self.children.append(child)
+
+    def listing(self):
+        tmpl = "1{0}\t{1}\t{2}\t{3}\t+"
+        return tmpl.format(self.name,
+                           self.descriptor,
+                           self.host,
+                           self.port)
 
     def __str__(self):
         res = []
@@ -56,9 +70,24 @@ class Chasha(object):
 
     def __init__(self):
         self.routes = {}
+        self.typepats = {
+                         'int': '[0-9]+',
+                         'float': '[0-9]+\.[0-9]+',
+                         'path': '[A-Za-z0-9/\.\-\s]+',
+                         'alnum': '[A-Za-z0-9]',
+                         'alpha': '[A-Za-z]+'}
+        # really more for inspection than anything
+        # else. Probalby *could* use these as the
+        # defaults down below...
+        self.port = 7070
+        self.host = '0.0.0.0'
 
     def add_route(self, descriptor, callback):
-        self.routes[descriptor] = callback
+        if ':' in descriptor:
+            desc = self.compile_route(descriptor)
+            self.routes[desc] = callback
+        else:
+            self.routes[descriptor] = callback
 
     def route(self, descriptor, **kwargs):
         def wrapper(handler):
@@ -69,17 +98,30 @@ class Chasha(object):
     def default(self):
         return self.route("/")
 
-    def default_directory(self):
-        pass
+    def compile_route(self, descriptor):
+        parts = descriptor.split('/')
+
+        res = []
+
+        for part in parts:
+
+            if ':' in part:
+                chasti = parts[1:-1].split(':')
+                if chasti[1] not in self.typepats:
+                    pat = ".*"
+                else:
+                    pat = self.typepats[chasti[1]]
+                res.append("(?<{0}>{1})", chasti[0], pat)
+            else:
+                res.append(part)
+
+        return '/'.join(res)
 
     def router(self, descriptor):
         idx = 0
         print "[!] In router; descriptor: {0}".format(descriptor)
         if descriptor == "":
-            if "/" in self.routes:
-                return self.routes["/"]
-            else:
-                return self.default_directory()
+            return self.routes.get("/")
         # NOTE: just for intial testing
         # actual processing has to go on here in the real deal...
         # TODO: look at processing the routes with subs & regex...
@@ -119,3 +161,6 @@ class Chasha(object):
                 # and, if so, reopen
                 pass
         sock.close()
+
+
+#class ChashaAsync(Chasha, asyncore.dispatcher)
