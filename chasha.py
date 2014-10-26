@@ -46,7 +46,7 @@ class Directory(object):
             #    res.append(str(child))
             elif isinstance(child, str):
                 # should probably handle multiline strings here...
-                res.append("i{0}\tFAKE\tNULL 0\t+".format(child))
+                res.append("i{0}\tFAKE\tNULL\t0\t+".format(child))
         res.append(".\r\n")
         print "[!] returning: ", res
         return '\r\n'.join(res)
