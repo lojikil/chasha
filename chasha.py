@@ -67,6 +67,13 @@ class Directory(object):
         return '\r\n'.join(res)
 
 
+class Request(object):
+
+    def __init__(self, descriptor=None, search=None):
+        self.descriptor = descriptor
+        self.search = search
+
+
 class Chasha(object):
 
     def __init__(self):
@@ -82,6 +89,7 @@ class Chasha(object):
         # defaults down below...
         self.port = 7070
         self.host = '0.0.0.0'
+        self.request = None
 
     def add_route(self, descriptor, callback):
         if ':' in descriptor:
@@ -166,7 +174,10 @@ class Chasha(object):
                 desc = desc.strip()
                 print "[!] client sent data..."
                 try:
-                    handler = self.router(desc)
+                    descparts = desc.split('\t')
+                    self.request = Request(cget(descparts, 0),
+                                           cget(descparts, 1))
+                    handler = self.router(descparts[0])
                     print "[!] router matched said data..."
                     print "[!] type of handler: ", type(handler)
                     if isinstance(handler, tuple):
