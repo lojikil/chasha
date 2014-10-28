@@ -36,10 +36,10 @@ def default():
     d.add_child([0, "Foo bar industries", "/foo", "127.0.0.1", "7070"])
     d.add_child("Some test info here...")
     d.add_child("Some more test info...")
-    d.add_child(Directory("/bar", port=7070, name="FooBar Testing"))
+    d.add_directory("FooBar Testing","/bar")
     d.add_child([0, "Test blah 10", "/blah/10", "127.0.0.1", "7070"])
     d.add_child([0, "Test blah 20", "/blah/20", "127.0.0.1", "7070"])
-    d.add_child([0, "Test blab 30", "/blah/30", "127.0.0.1", "7070"])
+    d.add_text("Test blab 30", "/blah/30")
     return d
 
 app.run()

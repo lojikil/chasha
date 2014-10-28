@@ -17,7 +17,7 @@ def cget(obj, idx, default=None):
 
 class Directory(object):
 
-    def __init__(self, descriptor, name=None, children=None, port=70,
+    def __init__(self, descriptor, name=None, children=None, port=7070,
                  host='127.0.0.1'):
 
         self.descriptor = descriptor
@@ -32,6 +32,142 @@ class Directory(object):
 
     def add_child(self, child):
         self.children.append(child)
+
+    #### start refactorable zeon
+    # really, the although the below is at least _somewhat_ clean
+    # I suspect it could be made cleaner still.
+
+    def add_common(self, dtype, description, descriptor, host=None, port=None):
+
+        if host is None:
+            host = self.host
+
+        if port is None:
+            port = self.port
+
+        self.add_child([ dtype, description, descriptor, host, port])
+
+    def add_link(self, description, descriptor, host=None, port=None):
+
+        self.add_common('h',
+                        description,
+                        "URL:{0}".format(descriptor),
+                        host,
+                        port)
+
+    def add_image(self, description, descriptor, host=None, port=None):
+
+        self.add_common('I',
+                        description,
+                        descriptor,
+                        host,
+                        port)
+
+    def add_binary(self, description, descriptor, host=None, port=None):
+
+        self.add_common('9',
+                        description,
+                        descriptor,
+                        host,
+                        port)
+
+    def add_telnet(self, description, descriptor, host=None, port=None):
+
+        self.add_common('8',
+                        description,
+                        descriptor,
+                        host,
+                        port)
+
+    def add_telnet(self, description, descriptor, host=None, port=None):
+
+        self.add_common('8',
+                        description,
+                        descriptor,
+                        host,
+                        port)
+
+    def add_search(self, description, descriptor, host=None, port=None):
+
+        self.add_common('7',
+                        description,
+                        descriptor,
+                        host,
+                        port)
+
+    def add_uue(self, description, descriptor, host=None, port=None):
+
+        self.add_common('6',
+                        description,
+                        descriptor,
+                        host,
+                        port)
+
+    def add_binarchive(self, description, descriptor, host=None, port=None):
+
+        self.add_common('5',
+                        description,
+                        descriptor,
+                        host,
+                        port)
+
+    def add_binhex(self, description, descriptor, host=None, port=None):
+
+        self.add_common('4',
+                        description,
+                        descriptor,
+                        host,
+                        port)
+
+    def add_error(self, description, descriptor, host=None, port=None):
+
+        self.add_common('3',
+                        description,
+                        descriptor,
+                        host="error.nohost",
+                        port="0")
+
+    def add_ccso(self, description, descriptor, host=None, port=None):
+
+        self.add_common('2',
+                        description,
+                        descriptor,
+                        host,
+                        port)
+
+    def add_directory(self, description, descriptor, host=None, port=None):
+
+        self.add_common('1',
+                        description,
+                        descriptor,
+                        host,
+                        port)
+
+    def add_text(self, description, descriptor, host=None, port=None):
+
+        self.add_common('0',
+                        description,
+                        descriptor,
+                        host,
+                        port)
+
+    def add_audio(self, description, descriptor, host=None, port=None):
+
+        self.add_common('s',
+                        description,
+                        descriptor,
+                        host,
+                        port)
+
+    def add_html(self, description, descriptor, host=None, port=None):
+
+        self.add_common('h',
+                        description,
+                        descriptor,
+                        host,
+                        port)
+
+    #### end refactorable zone
 
     def listing(self):
         tmpl = "1{0}\t{1}\t{2}\t{3}\t+"
