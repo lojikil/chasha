@@ -30,7 +30,7 @@ targets the Gopher protocol; it includes simple classes for handling Routes, Dir
         d.add_child("Information lines are simply text in directories")
         d.add_child("atm, multiline must be manually split")
         d.add_child([0, 'Test 10', '/test/10', '127.0.0.1', '7070'])
-        d.add_child([0, 'Test 20', '/test/20', '127.0.0.1', '7070'])
+        d.add_text('Test 20', '/test/20') # less manual version of the above
         d.add_child("And of course, you can mix info, links, &c.")
 
     app.run()
@@ -40,7 +40,7 @@ targets the Gopher protocol; it includes simple classes for handling Routes, Dir
  Currently support:
 
 - descriptors
-- Directories & Info lines naturally, all others manually
+- Directories via class, all others as Helper methods on Directory class
 - search strings
 
 ## Planned Support
@@ -51,7 +51,7 @@ targets the Gopher protocol; it includes simple classes for handling Routes, Dir
 
 # To Do
 
- The biggest thing I'd like to do is reduce the amount of manual work that has to be done in directories. A helper method
+ *DONE*: The biggest thing I'd like to do is reduce the amount of manual work that has to be done in directories. A helper method
 in the `Chasha` object, such as `Chasha#make_link` or even on the `Directory` class, to reduce the need for manual lists.
 (Actually, thinking about it, I like it on the `Directory` class more...). `Directory#add_URL`, `#add_image`, `#add_directory`
 all make it a bit easier, without having to add multiple classes.
