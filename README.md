@@ -13,7 +13,7 @@ targets the Gopher protocol; it includes simple classes for handling Routes, Dir
 
  The repository contains several example files, but the simplest example is the following:
 
-    from chasha import Chasha, Document
+    from chasha import Chasha, Directory
 
 
     app = Chasha()
