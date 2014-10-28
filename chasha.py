@@ -176,7 +176,6 @@ class Directory(object):
                 if isinstance(child, tuple):
                     child = list(child)
 
-                print "[!] child: ", child
                 res.append(tmpl.format(cget(child, 0),
                                        cget(child, 1),
                                        cget(child, 2, "FAKE"),
@@ -191,7 +190,6 @@ class Directory(object):
                 # should probably handle multiline strings here...
                 res.append("i{0}\tFAKE\tNULL\t0\t+".format(child))
         res.append(".\r\n")
-        print "[!] returning: ", res
         return '\r\n'.join(res)
 
 
@@ -215,6 +213,7 @@ class Chasha(object):
         # really more for inspection than anything
         # else. Probalby *could* use these as the
         # defaults down below...
+        self.debug = False
         self.port = 7070
         self.host = '0.0.0.0'
         self.request = None
@@ -258,7 +257,8 @@ class Chasha(object):
 
     def router(self, descriptor):
         idx = 0
-        print "[!] In router; descriptor: {0}".format(descriptor)
+        if self.debug:
+            print "[!] In router;descriptor: {0}".format(descriptor)
         if descriptor == "":
             return self.routes.get("/")
         # NOTE: just for intial testing
@@ -268,19 +268,23 @@ class Chasha(object):
         if descriptor in self.routes:
             # do we have a static descriptor that matches?
             # if yes, just return it
-            print "[!] in self.routes?"
+            if self.debug:
+                print "[!] in self.routes?"
             return self.routes[descriptor]
         else:
-            print "[!] in self.dyn_routes?"
+            if self.debug:
+                print "[!] in self.dyn_routes?"
             descriptors = self.dyn_routes.keys()
             for desc in descriptors:
                 mat = desc.match(descriptor)
 
                 if mat:
-                    print "[!] in dyn return?"
+                    if self.debug:
+                        print "[!] in dyn return?"
                     return (mat, self.dyn_routes[desc])
 
-        print "[!] in None return"
+        if self.debug:
+            print "[!] in None return"
         return None
 
     def run(self, **kwargs):
@@ -295,28 +299,34 @@ class Chasha(object):
         sock.listen(1)
         while self.loop_flag:
             try:
-                print "[!] waiting for accept..."
+                if self.debug:
+                    print "[!] waiting for accept..."
                 conn, addr = sock.accept()
-                print "[+] client connected from {0}".format(addr)
+                print "[+] client connected from {0}".format(addr),
                 desc = conn.recv(2048)
                 desc = desc.strip()
-                print "[!] client sent data..."
+                print " and requested: ", desc
+                if self.debug:
+                    print "[!] client sent data..."
                 try:
                     descparts = desc.split('\t')
                     self.request = Request(cget(descparts, 0),
                                            cget(descparts, 1))
                     handler = self.router(descparts[0])
-                    print "[!] router matched said data..."
-                    print "[!] type of handler: ", type(handler)
+                    if self.debug:
+                        print "[!] router matched said data..."
+                        print "[!] type of handler: ", type(handler)
                     if isinstance(handler, tuple):
                         mat = handler[0]
-                        print "[!] mat.groupdict:", mat.groupdict()
-                        print "[!] handler: ", handler[1]
+                        if self.debug:
+                            print "[!] mat.groupdict:", mat.groupdict()
+                            print "[!] handler: ", handler[1]
                         handler = handler[1]
                         data = handler(**mat.groupdict())
                     else:
                         data = handler()
-                    print "[!] handler returned data..."
+                    if self.debug:
+                        print "[!] handler returned data..."
                 except Exception as e:
                     print "[!] exception: ", e
                     data = "3nosuchdroute\tdoes not exist\terror.host\t1\r\n"
