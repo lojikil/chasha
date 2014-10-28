@@ -79,14 +79,6 @@ class Directory(object):
                         host,
                         port)
 
-    def add_telnet(self, description, descriptor, host=None, port=None):
-
-        self.add_common('8',
-                        description,
-                        descriptor,
-                        host,
-                        port)
-
     def add_search(self, description, descriptor, host=None, port=None):
 
         self.add_common('7',
