@@ -1,18 +1,17 @@
 import socket
 import re
+import os
 
-
-# TODO: add Directory/Info classes to more easily format the various types
-# of structured data that Gopher systems can handle.
-# directory could just have a simple "add_child"
-# XXX: have a sane default of just dumping all routes?
-# would have to associate a name with all routes too...
 
 def cget(obj, idx, default=None):
     try:
         return obj[idx]
     except IndexError:
         return default
+
+
+class GopherError(Exception):
+    pass
 
 
 class Directory(object):
@@ -33,7 +32,7 @@ class Directory(object):
     def add_child(self, child):
         self.children.append(child)
 
-    #### start refactorable zeon
+    #### start refactorable zone
     # really, the although the below is at least _somewhat_ clean
     # I suspect it could be made cleaner still.
 
@@ -45,7 +44,7 @@ class Directory(object):
         if port is None:
             port = self.port
 
-        self.add_child([ dtype, description, descriptor, host, port])
+        self.add_child([dtype, description, descriptor, host, port])
 
     def add_link(self, description, descriptor, host=None, port=None):
 
@@ -327,6 +326,8 @@ class Chasha(object):
                         data = handler()
                     if self.debug:
                         print "[!] handler returned data..."
+                except GopherError as ge:
+                    data = "3gophererror\t{0}\terror.host\t1\r\n".format(ge.message)
                 except Exception as e:
                     print "[!] exception: ", e
                     data = "3nosuchdroute\tdoes not exist\terror.host\t1\r\n"
@@ -342,5 +343,22 @@ class Chasha(object):
                 pass
         sock.close()
 
+
+def static_file(filename, root='.'):
+    """Handle static file request from a descriptor
+    in a safe fashion (removing '..', canonicalizing,
+    &c. Analogous to Bottle's `static_file`
+    """
+    pass
+
+
+def static_directory(root='.', unknowns_as='5'):
+    """Create a `Directory` object from a file system
+    directory; Meant to simplify the process of having
+    standard directories to load data from, &c.
+    """
+    retd = Directory()
+
+    return retd
 
 #class ChashaAsync(Chasha, asyncore.dispatcher)
