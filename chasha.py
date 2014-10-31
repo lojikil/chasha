@@ -352,12 +352,21 @@ def static_file(filename, root='.'):
     pass
 
 
-def static_directory(root='.', unknowns_as='5'):
+def static_directory(directory, root='.', unknowns_as='5'):
     """Create a `Directory` object from a file system
     directory; Meant to simplify the process of having
     standard directories to load data from, &c.
     """
     retd = Directory()
+    if directory[0] == "/":
+        directory = directory[1:]
+
+    directory = directory.replace("../", "")
+
+    items = os.listdir(os.path.join(os.path.abspath(root), directory))
+
+    for item in items:
+        pass
 
     return retd
 
