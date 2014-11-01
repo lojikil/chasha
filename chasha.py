@@ -2,6 +2,9 @@ import socket
 import re
 import os
 
+text_types = [".txt", ".ps", ".text", ".lst", ".dat",
+              ".py", ".c", ".c++", ".cpp", ".md", ".rst"]
+
 
 def cget(obj, idx, default=None):
     try:
@@ -344,29 +347,55 @@ class Chasha(object):
         sock.close()
 
 
-def static_file(filename, root='.'):
+def static_dispatch(portion, descriptor, root="."):
     """Handle static file request from a descriptor
     in a safe fashion (removing '..', canonicalizing,
     &c. Analogous to Bottle's `static_file`
     """
-    pass
+    portion = portion.replace("../", "")
+    tpath = os.path.join(root, portion)
+    if os.path.isfile(tpath):
+        fh = file(tpath)
+        data = fh.read()
+        fh.close()
+        return data
+
+    return static_directory(portion, os.path.join(descriptor, portion), root)
 
 
-def static_directory(directory, root='.', unknowns_as='5'):
+def static_directory(directory, descriptor, root='.', unknowns_as='5'):
     """Create a `Directory` object from a file system
     directory; Meant to simplify the process of having
     standard directories to load data from, &c.
     """
-    retd = Directory()
+    retd = Directory(directory)
     if directory[0] == "/":
         directory = directory[1:]
 
     directory = directory.replace("../", "")
 
+    rpath = os.path.join(os.path.abspath(root), directory)
     items = os.listdir(os.path.join(os.path.abspath(root), directory))
 
     for item in items:
-        pass
+        tdesc = os.path.join(descriptor, item)
+        tpath = os.path.join(rpath, item)
+
+        if os.path.isfile(tpath):
+            tmp = os.path.splitext(item)
+            if len(tmp) == 0:
+                retd.add_child([unknowns_as,
+                                tdesc,
+                                item])
+            elif tmp[1] in text_types:
+                retd.add_text(item, tdesc)
+            elif tmp[1] == ".html":
+                retd.add_html(item, tdesc)
+            else:
+                retd.add_binary(item, tdesc)
+
+        else:
+            retd.add_directory(item, tdesc)
 
     return retd
 
