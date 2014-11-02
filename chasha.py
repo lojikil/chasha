@@ -3,7 +3,8 @@ import re
 import os
 
 text_types = [".txt", ".ps", ".text", ".lst", ".dat",
-              ".py", ".c", ".c++", ".cpp", ".md", ".rst"]
+              ".py", ".c", ".c++", ".cpp", ".md", ".rst",
+              ".css", ".js", ".java", ".scm", ".ss", ".cfm"]
 
 
 def cget(obj, idx, default=None):
@@ -348,6 +349,24 @@ class Chasha(object):
 
 
 def static_dispatch(portion, descriptor, root="."):
+    """Handle static requests from a descriptor
+    in a safe fashion (removing '..', canonicalizing,
+    &c. Dispatches file reads or directory creation
+    based on the type of object pointed to. Use
+    `static_file` if you only want serve files.
+    """
+    portion = portion.replace("../", "")
+    tpath = os.path.join(root, portion)
+    if os.path.isfile(tpath):
+        fh = file(tpath)
+        data = fh.read()
+        fh.close()
+        return data
+
+    return static_directory(portion, os.path.join(descriptor, portion), root)
+
+
+def static_file(portion, descriptor, root="."):
     """Handle static file request from a descriptor
     in a safe fashion (removing '..', canonicalizing,
     &c. Analogous to Bottle's `static_file`
@@ -360,7 +379,7 @@ def static_dispatch(portion, descriptor, root="."):
         fh.close()
         return data
 
-    return static_directory(portion, os.path.join(descriptor, portion), root)
+    raise GopherError("Descriptor is not a file")
 
 
 def static_directory(directory, descriptor, root='.', unknowns_as='5'):
