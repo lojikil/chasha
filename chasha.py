@@ -1,6 +1,7 @@
 import socket
 import re
 import os
+import traceback
 
 text_types = [".txt", ".ps", ".text", ".lst", ".dat",
               ".py", ".c", ".c++", ".cpp", ".md", ".rst",
@@ -195,6 +196,30 @@ class Directory(object):
         res.append(".\r\n")
         return '\r\n'.join(res)
 
+    def __bytes__(self):
+        res = []
+        for child in self.children:
+            if isinstance(child, (list, tuple)):
+                tmpl = "{0}{1}\t{2}\t{3}\t{4}\t{5}"
+                if isinstance(child, tuple):
+                    child = list(child)
+
+                res.append(tmpl.format(cget(child, 0),
+                                       cget(child, 1),
+                                       cget(child, 2, "FAKE"),
+                                       cget(child, 3, "NULL"),
+                                       cget(child, 4, "0"),
+                                       cget(child, 5, "+")))
+            elif isinstance(child, Directory):
+                res.append(child.listing())
+            #elif isinstance(child, Information):
+            #    res.append(str(child))
+            elif isinstance(child, str):
+                # should probably handle multiline strings here...
+                res.append("i{0}\tFAKE\tNULL\t0\t+".format(child))
+        res.append(".\r\n")
+        return bytes('\r\n'.join(res), "utf-8")
+
 
 class Request(object):
 
@@ -306,8 +331,11 @@ class Chasha(object):
                     print("[!] waiting for accept...")
                 conn, addr = sock.accept()
                 print("[+] client connected from {0}".format(addr), end=' ')
+                # FIXME we need to actually read more here...
                 desc = conn.recv(2048)
                 desc = desc.strip()
+                # XXX this is also likely needing a review:
+                desc = desc.decode("utf-8")
                 print(" and requested: ", desc)
                 if self.debug:
                     print("[!] client sent data...")
@@ -334,14 +362,20 @@ class Chasha(object):
                     data = "3gophererror\t{0}\terror.host\t1\r\n".format(ge.message)
                 except Exception as e:
                     print("[!] exception: ", e)
+                    traceback.print_exception(e)
                     data = "3nosuchdroute\tdoes not exist\terror.host\t1\r\n"
                 # NOTE: should process return type here...
-                conn.send(str(data))
+                print("[!] here on 344, data is:", type(data), data)
+                if type(data) is str:
+                    conn.send(bytes(data, "utf-8"))
+                else:
+                    conn.send(bytes(data))
                 conn.close()
             except KeyboardInterrupt:
                 self.loop_flag = False
             except Exception as e:
                 print(e)
+                traceback.print_exception(e)
                 # NOTE: Should check if socket accidentally closed here
                 # and, if so, reopen
                 pass
