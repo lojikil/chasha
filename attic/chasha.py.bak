@@ -261,7 +261,7 @@ class Chasha(object):
     def router(self, descriptor):
         idx = 0
         if self.debug:
-            print("[!] In router;descriptor: {0}".format(descriptor))
+            print "[!] In router;descriptor: {0}".format(descriptor)
         if descriptor == "":
             return self.routes.get("/")
         # NOTE: just for intial testing
@@ -272,22 +272,22 @@ class Chasha(object):
             # do we have a static descriptor that matches?
             # if yes, just return it
             if self.debug:
-                print("[!] in self.routes?")
+                print "[!] in self.routes?"
             return self.routes[descriptor]
         else:
             if self.debug:
-                print("[!] in self.dyn_routes?")
-            descriptors = list(self.dyn_routes.keys())
+                print "[!] in self.dyn_routes?"
+            descriptors = self.dyn_routes.keys()
             for desc in descriptors:
                 mat = desc.match(descriptor)
 
                 if mat:
                     if self.debug:
-                        print("[!] in dyn return?")
+                        print "[!] in dyn return?"
                     return (mat, self.dyn_routes[desc])
 
         if self.debug:
-            print("[!] in None return")
+            print "[!] in None return"
         return None
 
     def run(self, **kwargs):
@@ -303,37 +303,37 @@ class Chasha(object):
         while self.loop_flag:
             try:
                 if self.debug:
-                    print("[!] waiting for accept...")
+                    print "[!] waiting for accept..."
                 conn, addr = sock.accept()
-                print("[+] client connected from {0}".format(addr), end=' ')
+                print "[+] client connected from {0}".format(addr),
                 desc = conn.recv(2048)
                 desc = desc.strip()
-                print(" and requested: ", desc)
+                print " and requested: ", desc
                 if self.debug:
-                    print("[!] client sent data...")
+                    print "[!] client sent data..."
                 try:
                     descparts = desc.split('\t')
                     self.request = Request(cget(descparts, 0),
                                            cget(descparts, 1))
                     handler = self.router(descparts[0])
                     if self.debug:
-                        print("[!] router matched said data...")
-                        print("[!] type of handler: ", type(handler))
+                        print "[!] router matched said data..."
+                        print "[!] type of handler: ", type(handler)
                     if isinstance(handler, tuple):
                         mat = handler[0]
                         if self.debug:
-                            print("[!] mat.groupdict:", mat.groupdict())
-                            print("[!] handler: ", handler[1])
+                            print "[!] mat.groupdict:", mat.groupdict()
+                            print "[!] handler: ", handler[1]
                         handler = handler[1]
                         data = handler(**mat.groupdict())
                     else:
                         data = handler()
                     if self.debug:
-                        print("[!] handler returned data...")
+                        print "[!] handler returned data..."
                 except GopherError as ge:
                     data = "3gophererror\t{0}\terror.host\t1\r\n".format(ge.message)
                 except Exception as e:
-                    print("[!] exception: ", e)
+                    print "[!] exception: ", e
                     data = "3nosuchdroute\tdoes not exist\terror.host\t1\r\n"
                 # NOTE: should process return type here...
                 conn.send(str(data))
@@ -341,7 +341,7 @@ class Chasha(object):
             except KeyboardInterrupt:
                 self.loop_flag = False
             except Exception as e:
-                print(e)
+                print e
                 # NOTE: Should check if socket accidentally closed here
                 # and, if so, reopen
                 pass
