@@ -220,6 +220,29 @@ class Directory(object):
         res.append(".\r\n")
         return bytes('\r\n'.join(res), "utf-8")
 
+    def to_gemini(self):
+        res = []
+        for child in self.children:
+            if isinstance(child, (list, tuple)):
+                dtype = child[0]
+                match dtype
+                    case '7':
+                        l = child[2]
+                        t = child[1]
+                        res.append(f"=> ccso://{l} {t}")
+                    default:
+                        res.append("sadness")
+
+            elif isinstance(child, Directory):
+                tmpl = f"=> {child.descriptor} {child.name}"
+                res.append(tmpl)
+            #elif isinstance(child, Information):
+            #    res.append(str(child))
+            elif isinstance(child, str):
+                # should probably handle multiline strings here...
+                res.append(child)
+        return bytes('\r\n'.join(res), "utf-8")
+
 
 class Request(object):
 
