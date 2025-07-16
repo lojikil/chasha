@@ -226,29 +226,39 @@ class Directory(object):
             if isinstance(child, (list, tuple)):
                 dtype = child[0]
                 match dtype
-                    case '7':
-                        l = child[2]
-                        t = child[1]
-                        res.append(f"=> ccso://{l} {t}")
-                    default:
-                        res.append("sadness")
+                    case 'i':
+                        res.append(child[1])
+                    case '2':
+                        res.append(f"=> ccso://{child[2]} {child[1]}")
+                    case ['8', 'T']:
+                        res.append(f"=> telnet://{child[2]} {child[1]}")
+                    case 'h':
+                        next_url = child[2].replace("URL:", "")
+                        res.append(f"=> {next_url} {child[1]}")
+                    case _:
+                        # FIXME we can actually do a bit better here by detecting if the
+                        # host for the next URL is actually the same as this server...
+                        next_url = None
+                        if child[4] != 1965:
+                            next_url = f"gemini://{child[3]}:{child[4]}/{child[2]}"
+                        else:
+                            next_url = f"gemini://{child[3]}/{child[2]}"
+                        res.append(f"=> {next_url} {child[1]}")
 
             elif isinstance(child, Directory):
                 tmpl = f"=> {child.descriptor} {child.name}"
                 res.append(tmpl)
-            #elif isinstance(child, Information):
-            #    res.append(str(child))
             elif isinstance(child, str):
-                # should probably handle multiline strings here...
                 res.append(child)
         return bytes('\r\n'.join(res), "utf-8")
 
 
 class Request(object):
 
-    def __init__(self, descriptor=None, search=None):
+    def __init__(self, descriptor=None, search=None, body=None):
         self.descriptor = descriptor
         self.search = search
+        self.body = body
 
 
 class Chasha(object):
@@ -342,6 +352,11 @@ class Chasha(object):
 
         self.port = kwargs.get('port', 7070)
         self.host = kwargs.get('host', '0.0.0.0')
+
+        self.server_type = kwargs.get("server_type", "gopher")
+
+        if self.server_type not in ["gopher", "gemini", "spartan"]:
+            self.server_type = "gopher"
 
         self.loop_flag = True
 
