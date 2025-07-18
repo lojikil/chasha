@@ -309,6 +309,8 @@ class Chasha(object):
     def __init__(self):
         self.routes = {}
         self.dyn_routes = {}
+        self.dyn_search = {}
+        self.search_routes = {}
         self.typepats = {'int': '[0-9]+',
                          'float': '[0-9]+\.[0-9]+',
                          'path': '[A-Za-z0-9/\.\-\s]+',
@@ -322,16 +324,30 @@ class Chasha(object):
         self.host = '0.0.0.0'
         self.request = None
 
-    def add_route(self, descriptor, callback):
+    def add_route(self, descriptor, callback, cfg):
+        # XXX I suspect we can clean this up more
+        # with the Information & Search classes from
+        # above: we can just have one _route_ table
+        # and then wrap the callback in whatever
+        # class from above, and allow the class to
+        # handle actually calling the callback
+        #
+        # this would in someways make the Search handling
+        # easier
         if ':' in descriptor:
             desc = self.compile_route(descriptor)
-            self.dyn_routes[re.compile(desc)] = callback
+            if "search" in cfg:
+                self.dyn_search[re.compile(desc)] = callback
+            else:
+                self.dyn_routes[re.compile(desc)] = callback
+        elif "search" in cfg:
+            self.search_routes[descriptor] = callback
         else:
             self.routes[descriptor] = callback
 
     def route(self, descriptor, **kwargs):
         def wrapper(handler):
-            self.add_route(descriptor, handler)
+            self.add_route(descriptor, handler, kwargs)
             return handler
         return wrapper
 
@@ -375,6 +391,8 @@ class Chasha(object):
             if self.debug:
                 print("[!] in self.routes?")
             return self.routes[descriptor]
+        elif descriptor in self.search_routes:
+            return self.search_routes[descriptor]
         else:
             if self.debug:
                 print("[!] in self.dyn_routes?")
