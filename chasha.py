@@ -19,6 +19,40 @@ class GopherError(Exception):
     pass
 
 
+class Information(object):
+    def __init__(self, body):
+        self.body = body
+
+    def __str__(self):
+        return self.body
+
+    def __bytes__(self):
+        return bytes(self.body, encoding="utf8")
+
+    def to_gemini(self):
+        # NOTE we actually probably want to apply some sort
+        # of grouping algorithm to remove newlines or the like
+        # from `self#body`, but for now just return the same
+        return self.body
+
+
+class Search(object):
+    # XXX I suspect what we actually want is to make
+    # a decorator that can mark something as a search,
+    # and then use that to instantiate a Search object.
+    # this can then return the wrapped call? I may need
+    # to think about this more
+    #
+    # actually, thinking about it more, since we will
+    # still need to mount a route, we may not care about
+    # having this as a wrapper, but rather just to help
+    # the Directory system; it *may not* be needed much
+    # herein
+
+    def __init__(self, prompt):
+        self.prompt = prompt
+
+
 class Directory(object):
 
     def __init__(self, descriptor, name=None, children=None, port=7070,
@@ -180,16 +214,18 @@ class Directory(object):
                 if isinstance(child, tuple):
                     child = list(child)
 
-                res.append(tmpl.format(cget(child, 0),
-                                       cget(child, 1),
+                res.append(tmpl.format(child[0],
+                                       child[1],
                                        cget(child, 2, "FAKE"),
                                        cget(child, 3, "NULL"),
                                        cget(child, 4, "0"),
                                        cget(child, 5, "+")))
             elif isinstance(child, Directory):
                 res.append(child.listing())
-            #elif isinstance(child, Information):
-            #    res.append(str(child))
+            elif isinstance(child, Information):
+                res.append(str(child))
+            elif isinstance(child, Search):
+                res.append(child.listing())
             elif isinstance(child, str):
                 # should probably handle multiline strings here...
                 res.append("i{0}\tFAKE\tNULL\t0\t+".format(child))
@@ -212,8 +248,10 @@ class Directory(object):
                                        cget(child, 5, "+")))
             elif isinstance(child, Directory):
                 res.append(child.listing())
-            #elif isinstance(child, Information):
-            #    res.append(str(child))
+            elif isinstance(child, Information):
+                res.append(str(child))
+            elif isinstance(child, Search):
+                res.append(child.listing())
             elif isinstance(child, str):
                 # should probably handle multiline strings here...
                 res.append("i{0}\tFAKE\tNULL\t0\t+".format(child))
@@ -248,6 +286,10 @@ class Directory(object):
             elif isinstance(child, Directory):
                 tmpl = f"=> {child.descriptor} {child.name}"
                 res.append(tmpl)
+            elif isinstance(child, Information):
+                res.append(child.to_gemini())
+            elif isinstance(child, Search):
+                res.append(child.to_gemini())
             elif isinstance(child, str):
                 res.append(child)
         return bytes('\r\n'.join(res), "utf-8")
@@ -255,10 +297,11 @@ class Directory(object):
 
 class Request(object):
 
-    def __init__(self, descriptor=None, search=None, body=None):
+    def __init__(self, descriptor=None, search=None, body=None, rtype=None):
         self.descriptor = descriptor
         self.search = search
         self.body = body
+        self.rtype = rtype
 
 
 class Chasha(object):
